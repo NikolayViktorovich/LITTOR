@@ -1,4 +1,4 @@
 # LITTOR
 ## PROCESS:
-### Settings (READY)
+## Settings (READY)
 ![littor](https://i.postimg.cc/bw9wpbQV/LITTOR-LOGO.jpg)
