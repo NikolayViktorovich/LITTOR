@@ -1,6 +1,6 @@
 # LITTOR
 
-## Основной стек:
+## ОСНОВНОЙ СТЕК:
 - React Native 0.74.1
 - Expo SDK 51.0.0
 - React 18.2.0
