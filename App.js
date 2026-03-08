@@ -1,68 +1,91 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import * as SplashScreen from 'expo-splash-screen';
+import './src/i18n';
 
-import AuthScreen from './src/screens/AuthScreen';
-import ChatsScreen from './src/screens/ChatsScreen';
-import ChatScreen from './src/screens/ChatScreen';
-import SettingsScreen from './src/screens/SettingsScreen';
-import { AuthContext } from './src/context/AuthContext';
-import { ThemeProvider } from './src/context/ThemeContext';
+import TabBar from './src/components/tab-bar';
+import Login from './src/screens/login';
+import Register from './src/screens/register';
+import Settings from './src/screens/settings';
+import Profile from './src/screens/profile';
+import EditProfile from './src/screens/edit';
+import Notifications from './src/screens/notifications';
+import Privacy from './src/screens/privacy';
+import Data from './src/screens/data';
+import Appearance from './src/screens/appearance';
+import Chat from './src/screens/chat';
+import Help from './src/screens/help';
+import About from './src/screens/about';
+import { ThemeProvider } from './src/context/theme';
+import AuthProvider from './src/context/authprovider';
+import { AuthContext } from './src/context/auth';
+
+SplashScreen.preventAutoHideAsync();
 
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const Tabs = () => (
+  <Tab.Navigator tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false, animation: 'fade', animationDuration: 80 }}>
+    <Tab.Screen name="SettingsTab" component={Settings} />
+  </Tab.Navigator>
+);
 
 export default function App() {
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
 
   useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) setUser(JSON.parse(userData));
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
       setLoading(false);
     }
-  };
+  }, [fontsLoaded]);
 
-  const signIn = async (userData) => {
-    await AsyncStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-  };
-
-  const signOut = async () => {
-    await AsyncStorage.removeItem('user');
-    setUser(null);
-  };
-
-  if (loading) return null;
+  if (!fontsLoaded || loading) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <AuthContext.Provider value={{ user, signIn, signOut }}>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              {!user ? (
-                <Stack.Screen name="Auth" component={AuthScreen} />
-              ) : (
-                <>
-                  <Stack.Screen name="Chats" component={ChatsScreen} />
-                  <Stack.Screen name="Chat" component={ChatScreen} />
-                  <Stack.Screen name="Settings" component={SettingsScreen} />
-                </>
-              )}
-            </Stack.Navigator>
-          </NavigationContainer>
-        </AuthContext.Provider>
+        <AuthProvider>
+          <AppNavigator />
+        </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function AppNavigator() {
+  const { user, loading } = React.useContext(AuthContext);
+
+  if (loading) return null;
+
+  return (
+    <NavigationContainer>
+      {user ? (
+        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', animationDuration: 150 }}>
+          <Stack.Screen name="main" component={Tabs} />
+          <Stack.Screen name="profile" component={Profile} />
+          <Stack.Screen name="edit" component={EditProfile} />
+          <Stack.Screen name="notifications" component={Notifications} />
+          <Stack.Screen name="privacy" component={Privacy} />
+          <Stack.Screen name="data" component={Data} />
+          <Stack.Screen name="appearance" component={Appearance} />
+          <Stack.Screen name="chat" component={Chat} />
+          <Stack.Screen name="help" component={Help} />
+          <Stack.Screen name="about" component={About} />
+        </Stack.Navigator>
+      ) : (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="login" component={Login} />
+          <Stack.Screen name="register" component={Register} />
+        </Stack.Navigator>
+      )}
+    </NavigationContainer>
   );
 }

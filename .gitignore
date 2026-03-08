@@ -14,6 +14,7 @@ dist/
 # Backend
 backend/node_modules/
 backend/.env
+backend/uploads/
 
 # macOS
 .DS_Store
