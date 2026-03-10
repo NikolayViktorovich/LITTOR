@@ -8,6 +8,7 @@ import * as Clipboard from 'expo-clipboard';
 import { AuthContext } from '../context/auth';
 import { API_URL } from '../config/constants';
 import { formatPhoneNumber } from '../utils/formatphone';
+import { getAvatarColor } from '../utils/avatarcolors';
 import PhotoPickerModal from '../components/photo-picker-modal';
 import PhotoViewer from '../components/photo-viewer';
 import QRModal from '../components/qr-modal';
@@ -138,7 +139,7 @@ export default function MyProfileScreen({ navigation }) {
         <View style={s.prof}>
           <View style={s.avaCont}>
             <TouchableOpacity style={s.ava} onPress={() => profile?.photos?.length > 0 && setShowViewer(true)} activeOpacity={0.8}>
-              {uploading ? <ActivityIndicator size="large" color="#FFF" /> : profile?.photos?.length > 0 ? <Image source={{ uri: profile.photos[0] }} style={s.avaImg} /> : <Text style={s.avaTxt}>{(profile?.name || user?.username || 'U').charAt(0).toUpperCase()}</Text>}
+              {uploading ? <ActivityIndicator size="large" color="#FFF" /> : profile?.photos?.length > 0 ? <Image source={{ uri: profile.photos[0] }} style={s.avaImg} /> : <View style={[s.avaPlaceholder, { backgroundColor: getAvatarColor(user?.id) }]}><Text style={s.avaTxt}>{(profile?.name || user?.username || 'U').charAt(0).toUpperCase()}</Text></View>}
             </TouchableOpacity>
             {profile?.photos && profile.photos.length > 1 && (
               <View style={s.dots}>
@@ -156,7 +157,7 @@ export default function MyProfileScreen({ navigation }) {
           <View style={s.chan}>
             <View style={s.chanHead}><Text style={s.chanLabel}>{t('profile.channel')}</Text></View>
             <TouchableOpacity style={s.chanCard} activeOpacity={0.7}>
-              <View style={s.chanAva}>
+              <View style={[s.chanAva, { backgroundColor: getAvatarColor(user?.id) }]}>
                 {profile?.photos?.length > 0 ? <Image source={{ uri: profile.photos[0] }} style={s.chanAvaImg} /> : <Text style={s.chanAvaTxt}>{(profile?.username || 'U').charAt(0).toUpperCase()}</Text>}
               </View>
               <View style={s.chanInfo}><Text style={s.chanName}>{profile.username}</Text></View>
@@ -218,7 +219,8 @@ const s = StyleSheet.create({
   editTxt: { fontSize: 15, fontWeight: '500', color: '#007AFF' },
   prof: { alignItems: 'center', paddingTop: 16, paddingBottom: 16 },
   avaCont: { position: 'relative', marginBottom: 16 },
-  ava: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  ava: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  avaPlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
   avaImg: { width: '100%', height: '100%' },
   avaTxt: { fontSize: 40, fontWeight: '500', color: '#FFF' },
   dots: { flexDirection: 'row', position: 'absolute', bottom: -12, left: 0, right: 0, justifyContent: 'center', gap: 4 },
@@ -231,7 +233,7 @@ const s = StyleSheet.create({
   chanHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8 },
   chanLabel: { fontSize: 13, fontWeight: '500', color: '#8E8E93', letterSpacing: 0.5 },
   chanCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1C', marginHorizontal: 16, padding: 12, borderRadius: 28 },
-  chanAva: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', marginRight: 12, overflow: 'hidden' },
+  chanAva: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 12, overflow: 'hidden' },
   chanAvaImg: { width: '100%', height: '100%' },
   chanAvaTxt: { fontSize: 20, fontWeight: '500', color: '#FFF' },
   chanInfo: { flex: 1 },
