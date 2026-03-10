@@ -12,6 +12,7 @@ export default {
     close: 'Close',
     error: 'Error',
     success: 'Success',
+    copy: 'Copy',
   },
   tabs: {
     settings: 'Settings',
@@ -20,6 +21,7 @@ export default {
     title: 'Settings',
     myProfile: 'My Profile',
     changePhoto: 'Change Photo',
+    addAccount: 'Add Account',
     notifications: 'Notifications',
     privacy: 'Privacy',
     dataStorage: 'Data and Storage',
@@ -270,6 +272,9 @@ export default {
     username: 'username',
     birthday: 'birthday',
     bio: 'bio',
+    copied: 'Copied',
+    phoneCopied: 'Phone number copied to clipboard',
+    usernameCopied: 'Username copied to clipboard',
   },
   editProfile: {
     title: 'Edit',

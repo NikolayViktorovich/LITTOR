@@ -11,7 +11,8 @@ export default {
     "no": "Нет",
     "close": "Закрыть",
     "error": "Ошибка",
-    "success": "Успех"
+    "success": "Успех",
+    "copy": "Копировать"
   },
   tabs: {
     settings: 'Настройки',
@@ -20,6 +21,7 @@ export default {
     title: 'Настройки',
     myProfile: 'Мой профиль',
     changePhoto: 'Изменить фотографию',
+    addAccount: 'Добавить аккаунт',
     notifications: 'Уведомления',
     privacy: 'Конфиденциальность',
     dataStorage: 'Данные и память',
@@ -270,6 +272,9 @@ export default {
     username: 'имя пользователя',
     birthday: 'день рождения',
     bio: 'о себе',
+    copied: 'Скопировано',
+    phoneCopied: 'Номер телефона скопирован в буфер обмена',
+    usernameCopied: 'Имя пользователя скопировано в буфер обмена',
   },
   editProfile: {
     title: 'Редактировать',
