@@ -2,19 +2,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middleware/auth');
+const { pool, redis } = require('../config/database');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-const accountSessions = new Map();
-const addAccountCodes = new Map();
-
-const getAccountsByDevice = (deviceId) => {
-  if (!accountSessions.has(deviceId)) {
-    accountSessions.set(deviceId, []);
-  }
-  return accountSessions.get(deviceId);
-};
 
 router.post('/send-code', authMiddleware, async (req, res) => {
   try {
@@ -24,20 +15,15 @@ router.post('/send-code', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Некорректный номер телефона' });
     }
 
-    const authRoutes = require('./auth');
-    const usersModule = authRoutes.users;
-    const user = Array.from(usersModule.values()).find(u => u.phone === phone);
+    const result = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
     
-    if (!user) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Аккаунт не найден' });
     }
 
     const code = Math.floor(10000 + Math.random() * 90000).toString();
     
-    addAccountCodes.set(phone, {
-      code,
-      expiresAt: Date.now() + 5 * 60 * 1000
-    });
+    await redis.setex(`add_account_code:${phone}`, 300, code);
 
     console.log(`Код добавления аккаунта для ${phone}: ${code}`);
 
@@ -49,95 +35,120 @@ router.post('/send-code', authMiddleware, async (req, res) => {
 });
 
 router.post('/verify-code', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     const { phone, code, deviceId } = req.body;
 
-    const savedCode = addAccountCodes.get(phone);
+    const savedCode = await redis.get(`add_account_code:${phone}`);
     
     if (!savedCode) {
       return res.status(400).json({ message: 'Код не найден или истек' });
     }
 
-    if (Date.now() > savedCode.expiresAt) {
-      addAccountCodes.delete(phone);
-      return res.status(400).json({ message: 'Код истек' });
-    }
-
-    if (savedCode.code !== code) {
+    if (savedCode !== code) {
       return res.status(400).json({ message: 'Неверный код' });
     }
 
-    addAccountCodes.delete(phone);
+    await redis.del(`add_account_code:${phone}`);
 
-    const authRoutes = require('./auth');
-    const usersModule = authRoutes.users;
-    const profilesModule = authRoutes.profiles;
-    const user = Array.from(usersModule.values()).find(u => u.phone === phone);
+    const userResult = await client.query('SELECT * FROM users WHERE phone = $1', [phone]);
     
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ message: 'Аккаунт не найден' });
     }
 
-    const accounts = getAccountsByDevice(deviceId);
-    
-    if (accounts.find(a => a.userId === user.id)) {
-      const existingAccount = accounts.find(a => a.userId === user.id);
+    const user = userResult.rows[0];
+
+    const existingSession = await client.query(
+      'SELECT * FROM account_sessions WHERE device_id = $1 AND user_id = $2',
+      [deviceId, user.id]
+    );
+
+    if (existingSession.rows.length > 0) {
+      const profileResult = await client.query('SELECT photos FROM profiles WHERE id = $1', [user.id]);
+      const photos = profileResult.rows[0]?.photos || [];
+
       return res.json({ 
         message: 'Аккаунт уже добавлен',
-        account: existingAccount
+        account: {
+          userId: user.id,
+          token: existingSession.rows[0].token,
+          phone: user.phone,
+          name: user.name,
+          lastName: user.last_name,
+          username: user.username,
+          photo: photos[0] || null
+        }
       });
     }
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
-    const profile = profilesModule.get(user.id);
 
-    const accountData = {
-      userId: user.id,
-      token,
-      phone: profile.phone,
-      name: profile.name,
-      lastName: profile.lastName,
-      username: profile.username,
-      photo: profile.photos?.[0] || null,
-      addedAt: new Date()
-    };
+    await client.query(
+      'INSERT INTO account_sessions (device_id, user_id, token) VALUES ($1, $2, $3)',
+      [deviceId, user.id, token]
+    );
 
-    accounts.push(accountData);
+    const profileResult = await client.query('SELECT photos FROM profiles WHERE id = $1', [user.id]);
+    const photos = profileResult.rows[0]?.photos || [];
 
     res.json({ 
       message: 'Аккаунт добавлен',
-      account: accountData
+      account: {
+        userId: user.id,
+        token,
+        phone: user.phone,
+        name: user.name,
+        lastName: user.last_name,
+        username: user.username,
+        photo: photos[0] || null
+      }
     });
   } catch (error) {
     console.error('ошибка проверки кода:', error);
     res.status(500).json({ message: 'Ошибка проверки кода' });
+  } finally {
+    client.release();
   }
 });
 
 router.post('/add', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { phone, password, deviceId, autoAdd, token: providedToken } = req.body;
+    const { phone, deviceId, autoAdd, token: providedToken } = req.body;
 
     if (!phone || !deviceId) {
       return res.status(400).json({ message: 'Телефон и deviceId обязательны' });
     }
 
-    const authRoutes = require('./auth');
-    const usersModule = authRoutes.users;
-    const profilesModule = authRoutes.profiles;
-
-    const user = Array.from(usersModule.values()).find(u => u.phone === phone);
+    const userResult = await client.query('SELECT * FROM users WHERE phone = $1', [phone]);
     
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ message: 'Аккаунт не найден' });
     }
 
-    const accounts = getAccountsByDevice(deviceId);
-    
-    if (accounts.find(a => a.userId === user.id)) {
+    const user = userResult.rows[0];
+
+    const existingSession = await client.query(
+      'SELECT * FROM account_sessions WHERE device_id = $1 AND user_id = $2',
+      [deviceId, user.id]
+    );
+
+    if (existingSession.rows.length > 0) {
+      const profileResult = await client.query('SELECT photos FROM profiles WHERE id = $1', [user.id]);
+      const photos = profileResult.rows[0]?.photos || [];
+
       return res.json({ 
         message: 'Аккаунт уже добавлен',
-        account: accounts.find(a => a.userId === user.id)
+        account: {
+          userId: user.id,
+          token: existingSession.rows[0].token,
+          phone: user.phone,
+          name: user.name,
+          lastName: user.last_name,
+          username: user.username,
+          photo: photos[0] || null
+        }
       });
     }
 
@@ -145,85 +156,88 @@ router.post('/add', authMiddleware, async (req, res) => {
     if (autoAdd && providedToken) {
       token = providedToken;
     } else {
-      if (!password) {
-        return res.status(400).json({ message: 'Пароль обязателен' });
-      }
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      if (!isValidPassword) {
-        return res.status(401).json({ message: 'Неверный пароль' });
-      }
       token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
     }
 
-    const profile = profilesModule.get(user.id);
+    await client.query(
+      'INSERT INTO account_sessions (device_id, user_id, token) VALUES ($1, $2, $3)',
+      [deviceId, user.id, token]
+    );
 
-    const accountData = {
-      userId: user.id,
-      token,
-      phone: profile.phone,
-      name: profile.name,
-      lastName: profile.lastName,
-      username: profile.username,
-      photo: profile.photos?.[0] || null,
-      addedAt: new Date()
-    };
-
-    accounts.push(accountData);
+    const profileResult = await client.query('SELECT photos FROM profiles WHERE id = $1', [user.id]);
+    const photos = profileResult.rows[0]?.photos || [];
 
     res.json({ 
       message: 'Аккаунт добавлен',
-      account: accountData
+      account: {
+        userId: user.id,
+        token,
+        phone: user.phone,
+        name: user.name,
+        lastName: user.last_name,
+        username: user.username,
+        photo: photos[0] || null
+      }
     });
   } catch (error) {
     console.error('ошибка добавления аккаунта:', error);
     res.status(500).json({ message: 'Ошибка добавления аккаунта' });
+  } finally {
+    client.release();
   }
 });
 
-router.get('/list/:deviceId', authMiddleware, (req, res) => {
+router.get('/list/:deviceId', authMiddleware, async (req, res) => {
   try {
     const { deviceId } = req.params;
-    console.log('GET /accounts/list/:deviceId - deviceId:', deviceId);
-    const accounts = getAccountsByDevice(deviceId);
-    console.log('Accounts found:', accounts.length);
 
-    const authRoutes = require('./auth');
-    const profilesModule = authRoutes.profiles;
-    
-    const enrichedAccounts = accounts.map(acc => {
-      const profile = profilesModule.get(acc.userId);
-      return {
-        userId: acc.userId,
-        token: acc.token,
-        phone: profile?.phone || acc.phone,
-        name: profile?.name || acc.name,
-        lastName: profile?.lastName || acc.lastName,
-        username: profile?.username || acc.username,
-        photo: profile?.photos?.[0] || acc.photo,
-        addedAt: acc.addedAt
-      };
-    });
+    const result = await pool.query(`
+      SELECT 
+        s.user_id as "userId",
+        s.token,
+        u.phone,
+        u.name,
+        u.last_name as "lastName",
+        u.username,
+        p.photos,
+        s.added_at as "addedAt"
+      FROM account_sessions s
+      JOIN users u ON s.user_id = u.id
+      LEFT JOIN profiles p ON u.id = p.id
+      WHERE s.device_id = $1
+      ORDER BY s.added_at DESC
+    `, [deviceId]);
 
-    console.log('Returning accounts:', enrichedAccounts.length);
-    res.json({ accounts: enrichedAccounts });
+    const accounts = result.rows.map(acc => ({
+      userId: acc.userId,
+      token: acc.token,
+      phone: acc.phone,
+      name: acc.name,
+      lastName: acc.lastName,
+      username: acc.username,
+      photo: acc.photos?.[0] || null,
+      addedAt: acc.addedAt
+    }));
+
+    res.json({ accounts });
   } catch (error) {
     console.error('ошибка получения списка аккаунтов:', error);
     res.status(500).json({ message: 'Ошибка получения списка аккаунтов' });
   }
 });
 
-router.delete('/remove/:deviceId/:userId', authMiddleware, (req, res) => {
+router.delete('/remove/:deviceId/:userId', authMiddleware, async (req, res) => {
   try {
     const { deviceId, userId } = req.params;
-    const accounts = getAccountsByDevice(deviceId);
 
-    const index = accounts.findIndex(a => a.userId === userId);
-    
-    if (index === -1) {
+    const result = await pool.query(
+      'DELETE FROM account_sessions WHERE device_id = $1 AND user_id = $2 RETURNING *',
+      [deviceId, userId]
+    );
+
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Аккаунт не найден' });
     }
-
-    accounts.splice(index, 1);
 
     res.json({ message: 'Аккаунт удален' });
   } catch (error) {
@@ -232,7 +246,7 @@ router.delete('/remove/:deviceId/:userId', authMiddleware, (req, res) => {
   }
 });
 
-router.post('/switch', authMiddleware, (req, res) => {
+router.post('/switch', authMiddleware, async (req, res) => {
   try {
     const { userId, deviceId } = req.body;
 
@@ -240,26 +254,35 @@ router.post('/switch', authMiddleware, (req, res) => {
       return res.status(400).json({ message: 'userId и deviceId обязательны' });
     }
 
-    const accounts = getAccountsByDevice(deviceId);
-    const account = accounts.find(a => a.userId === userId);
+    const sessionResult = await pool.query(
+      'SELECT token FROM account_sessions WHERE device_id = $1 AND user_id = $2',
+      [deviceId, userId]
+    );
 
-    if (!account) {
+    if (sessionResult.rows.length === 0) {
       return res.status(404).json({ message: 'Аккаунт не найден' });
     }
 
-    const authRoutes = require('./auth');
-    const profilesModule = authRoutes.profiles;
-    const profile = profilesModule.get(userId);
+    const userResult = await pool.query(`
+      SELECT u.*, p.photos
+      FROM users u
+      LEFT JOIN profiles p ON u.id = p.id
+      WHERE u.id = $1
+    `, [userId]);
+
+    const user = userResult.rows[0];
+
+    await redis.setex(`user:${userId}:online`, 300, '1');
 
     res.json({
       user: {
-        id: userId,
-        username: profile.username,
-        name: profile.name,
-        lastName: profile.lastName,
-        phone: profile.phone,
-        birthDate: profile.birthDate,
-        token: account.token
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        lastName: user.last_name,
+        phone: user.phone,
+        birthDate: user.birth_date,
+        token: sessionResult.rows[0].token
       }
     });
   } catch (error) {
