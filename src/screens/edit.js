@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../context/auth';
 import { API_URL } from '../config/constants';
 import { formatPhoneNumber } from '../utils/formatphone';
+import { getAvatarColor } from '../utils/avatarcolors';
 import PhotoPickerModal from '../components/photo-picker-modal';
 import EditPhoneModal from '../components/edit-phone-modal';
 import EditUsernameModal from '../components/edit-username-modal';
@@ -119,7 +120,7 @@ export default function EditProfileScreen({ navigation, route }) {
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.photo}>
-          <TouchableOpacity style={s.ava} onPress={() => setShowPhoto(true)} activeOpacity={0.8}>
+          <TouchableOpacity style={[s.ava, { backgroundColor: getAvatarColor(user?.id) }]} onPress={() => setShowPhoto(true)} activeOpacity={0.8}>
             {uploading ? <ActivityIndicator size="large" color="#FFF" /> : profile?.photos?.length > 0 ? <Image source={{ uri: profile.photos[0] }} style={s.avaImg} /> : <Text style={s.avaTxt}>{(name || username || 'U').charAt(0).toUpperCase()}</Text>}
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setShowPhoto(true)} activeOpacity={0.7}>
@@ -177,7 +178,7 @@ const s = StyleSheet.create({
   done: { paddingHorizontal: 8, minWidth: 60, alignItems: 'flex-end', zIndex: 1 },
   doneTxt: { fontSize: 17, fontWeight: '500', color: '#007AFF' },
   photo: { alignItems: 'center', paddingVertical: 32 },
-  ava: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
+  ava: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
   avaImg: { width: '100%', height: '100%' },
   avaTxt: { fontSize: 40, fontWeight: '500', color: '#FFF' },
   change: { fontSize: 17, color: '#007AFF' },
