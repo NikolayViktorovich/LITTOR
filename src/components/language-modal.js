@@ -62,13 +62,13 @@ export default function LanguageModal({ visible, currentLanguage, languages, onS
 
 const s = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modal: { backgroundColor: '#2C2C2E', borderRadius: 20, width: '100%', maxWidth: 340, overflow: 'hidden' },
+  modal: { backgroundColor: '#1A1A1C', borderRadius: 20, width: '100%', maxWidth: 340, overflow: 'hidden' },
   header: { padding: 20, borderBottomWidth: 0.5, borderBottomColor: 'rgba(255,255,255,0.1)' },
-  title: { fontSize: 17, fontWeight: '600', color: '#FFF', textAlign: 'center' },
+  title: { fontSize: 17, fontWeight: '500', color: '#FFF', textAlign: 'center' },
   opts: { paddingVertical: 8 },
   opt: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14 },
   active: { backgroundColor: 'rgba(10,132,255,0.1)' },
-  label: { flex: 1, fontSize: 16, fontWeight: '500', color: '#FFF' },
+  label: { flex: 1, fontSize: 16, fontWeight: '400', color: '#FFF' },
   cancel: { paddingVertical: 16, borderTopWidth: 0.5, borderTopColor: 'rgba(255,255,255,0.1)', alignItems: 'center' },
-  cancelTxt: { fontSize: 16, fontWeight: '500', color: '#0A84FF' },
+  cancelTxt: { fontSize: 16, fontWeight: '400', color: '#0A84FF' },
 });
