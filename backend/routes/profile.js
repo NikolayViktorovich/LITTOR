@@ -5,7 +5,7 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs').promises;
 const authMiddleware = require('../middleware/auth');
-const authRoutes = require('./auth');
+const { pool } = require('../config/database');
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -21,34 +21,32 @@ const upload = multer({
   }
 });
 
-const profiles = authRoutes.profiles;
-
-const getProfile = (userId) => {
-  if (!profiles.has(userId)) {
-    profiles.set(userId, {
-      id: userId,
-      name: '',
-      lastName: '',
-      username: '',
-      bio: '',
-      phone: '',
-      birthDate: '',
-      photos: []
-    });
-  }
-  return profiles.get(userId);
-};
-
-router.get('/:userId', authMiddleware, (req, res) => {
+router.get('/:userId', authMiddleware, async (req, res) => {
   try {
-    const profile = getProfile(req.params.userId);
+    const result = await pool.query(`
+      SELECT u.id, u.username, u.name, u.last_name as "lastName", u.phone, u.birth_date as "birthDate", 
+             p.bio, p.photos
+      FROM users u
+      LEFT JOIN profiles p ON u.id = p.id
+      WHERE u.id = $1
+    `, [req.params.userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Профиль не найден' });
+    }
+
+    const profile = result.rows[0];
+    profile.photos = profile.photos || [];
+
     res.json(profile);
   } catch (error) {
+    console.error('ошибка получения профиля:', error);
     res.status(500).json({ message: 'Ошибка получения профиля' });
   }
 });
 
 router.put('/:userId', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     if (req.userId !== req.params.userId) {
       return res.status(403).json({ message: 'Нет доступа' });
@@ -72,18 +70,35 @@ router.put('/:userId', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Bio слишком длинное' });
     }
 
-    const profile = getProfile(req.params.userId);
-    profile.name = name.trim();
-    profile.lastName = lastName ? lastName.trim() : '';
-    profile.username = username.trim();
-    profile.bio = bio ? bio.trim() : '';
-    profile.phone = phone ? phone.trim() : '';
-    profile.birthDate = birthDate ? birthDate.trim() : '';
+    await client.query('BEGIN');
 
-    res.json(profile);
+    await client.query(
+      'UPDATE users SET name = $1, last_name = $2, username = $3, phone = $4, birth_date = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6',
+      [name.trim(), lastName ? lastName.trim() : '', username.trim(), phone ? phone.trim() : '', birthDate ? birthDate.trim() : '', req.params.userId]
+    );
+
+    await client.query(
+      'UPDATE profiles SET bio = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [bio ? bio.trim() : '', req.params.userId]
+    );
+
+    await client.query('COMMIT');
+
+    const result = await client.query(`
+      SELECT u.id, u.username, u.name, u.last_name as "lastName", u.phone, u.birth_date as "birthDate", 
+             p.bio, p.photos
+      FROM users u
+      LEFT JOIN profiles p ON u.id = p.id
+      WHERE u.id = $1
+    `, [req.params.userId]);
+
+    res.json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('ошибка обновления профиля:', error);
     res.status(500).json({ message: 'Ошибка обновления профиля' });
+  } finally {
+    client.release();
   }
 });
 
@@ -98,8 +113,6 @@ router.post('/:userId/photo', authMiddleware, upload.single('photo'), async (req
     }
 
     const userId = req.params.userId;
-    const profile = getProfile(userId);
-
     const filename = `profile-${userId}-${Date.now()}.jpg`;
     const filepath = path.join(__dirname, '../uploads', filename);
 
@@ -110,14 +123,16 @@ router.post('/:userId/photo', authMiddleware, upload.single('photo'), async (req
 
     const photoUrl = `/uploads/${filename}`;
     
-    if (!profile.photos) {
-      profile.photos = [];
-    }
+    const result = await pool.query('SELECT photos FROM profiles WHERE id = $1', [userId]);
+    let photos = result.rows[0]?.photos || [];
     
-    profile.photos.unshift(photoUrl);
+    photos.unshift(photoUrl);
 
-    res.json({ photos: profile.photos });
+    await pool.query('UPDATE profiles SET photos = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [photos, userId]);
+
+    res.json({ photos });
   } catch (error) {
+    console.error('ошибка загрузки фото:', error);
     res.status(500).json({ message: error.message || 'Ошибка загрузки фотографии' });
   }
 });
@@ -129,16 +144,19 @@ router.put('/:userId/photo/main', authMiddleware, async (req, res) => {
     }
 
     const { photoIndex } = req.body;
-    const profile = getProfile(req.params.userId);
+    const result = await pool.query('SELECT photos FROM profiles WHERE id = $1', [req.params.userId]);
+    let photos = result.rows[0]?.photos || [];
 
-    if (!profile.photos || photoIndex >= profile.photos.length) {
+    if (photoIndex >= photos.length) {
       return res.status(400).json({ message: 'Фото не найдено' });
     }
 
-    const photo = profile.photos.splice(photoIndex, 1)[0];
-    profile.photos.unshift(photo);
+    const photo = photos.splice(photoIndex, 1)[0];
+    photos.unshift(photo);
 
-    res.json({ photos: profile.photos });
+    await pool.query('UPDATE profiles SET photos = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [photos, req.params.userId]);
+
+    res.json({ photos });
   } catch (error) {
     console.error('ошибка установки главного фото:', error);
     res.status(500).json({ message: 'Ошибка установки основного фото' });
@@ -152,20 +170,23 @@ router.delete('/:userId/photo/:photoIndex', authMiddleware, async (req, res) => 
     }
 
     const photoIndex = parseInt(req.params.photoIndex);
-    const profile = getProfile(req.params.userId);
+    const result = await pool.query('SELECT photos FROM profiles WHERE id = $1', [req.params.userId]);
+    let photos = result.rows[0]?.photos || [];
 
-    if (!profile.photos || photoIndex >= profile.photos.length) {
+    if (photoIndex >= photos.length) {
       return res.status(400).json({ message: 'Фото не найдено' });
     }
 
-    const photoPath = path.join(__dirname, '..', profile.photos[photoIndex]);
+    const photoPath = path.join(__dirname, '..', photos[photoIndex]);
     try {
       await fs.unlink(photoPath);
     } catch (err) {}
     
-    profile.photos.splice(photoIndex, 1);
+    photos.splice(photoIndex, 1);
 
-    res.json({ photos: profile.photos });
+    await pool.query('UPDATE profiles SET photos = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [photos, req.params.userId]);
+
+    res.json({ photos });
   } catch (error) {
     console.error('ошибка удаления фото:', error);
     res.status(500).json({ message: 'Ошибка удаления фотографии' });
