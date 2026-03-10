@@ -37,7 +37,7 @@ export default function PhotoPickerModal({ visible, onClose, onPhotoSelected }) 
   const gallery = async () => {
     if (!await req('gallery')) return;
     try {
-      const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+      const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
       if (!r.canceled && r.assets && r.assets[0]) {
         onPhotoSelected(r.assets[0].uri);
         onClose();

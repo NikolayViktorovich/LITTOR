@@ -4,8 +4,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
-import * as SplashScreen from 'expo-splash-screen';
 import './src/i18n';
 
 import TabBar from './src/components/tab-bar';
@@ -26,8 +24,6 @@ import { ThemeProvider } from './src/context/theme';
 import AuthProvider from './src/context/authprovider';
 import { AuthContext } from './src/context/auth';
 
-SplashScreen.preventAutoHideAsync();
-
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -38,18 +34,6 @@ const Tabs = () => (
 );
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-      setLoading(false);
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded || loading) return null;
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>

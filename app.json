@@ -5,6 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "main": "index.js",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.littor.app",
@@ -29,8 +31,7 @@
         {
           "photosPermission": "LITTOR needs access to your photos to send images"
         }
-      ],
-      "expo-font"
+      ]
     ]
   }
 }
