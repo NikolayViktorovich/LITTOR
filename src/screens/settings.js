@@ -7,6 +7,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/auth';
 import { API_URL } from '../config/constants';
 import { formatPhoneNumber } from '../utils/formatphone';
+import { getAvatarColor } from '../utils/avatarcolors';
 import ConfirmModal from '../components/confirm-modal';
 import LanguageModal from '../components/language-modal';
 import PhotoPickerModal from '../components/photo-picker-modal';
@@ -245,7 +246,7 @@ export default function SettingsScreen({ navigation }) {
         <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
           <View style={s.prof}>
             <TouchableOpacity style={s.ava} onPress={() => profile?.photos?.length > 0 && setShowViewer(true)} activeOpacity={0.8}>
-              {uploading ? <ActivityIndicator size="large" color="#FFF" /> : profile?.photos?.length > 0 ? <Image source={{ uri: profile.photos[0] }} style={s.avaImg} /> : <Text style={s.avaTxt}>{(profile?.name || user?.username || 'U').charAt(0).toUpperCase()}</Text>}
+              {uploading ? <ActivityIndicator size="large" color="#FFF" /> : profile?.photos?.length > 0 ? <Image source={{ uri: profile.photos[0] }} style={s.avaImg} /> : <View style={[s.avaPlaceholder, { backgroundColor: getAvatarColor(user?.id) }]}><Text style={s.avaTxt}>{(profile?.name || user?.username || 'U').charAt(0).toUpperCase()}</Text></View>}
             </TouchableOpacity>
             <Text style={s.name}>{[profile?.name, profile?.lastName].filter(Boolean).join(' ') || user?.username || 'User'}</Text>
             <View style={s.phone}>
@@ -269,7 +270,7 @@ export default function SettingsScreen({ navigation }) {
                 onLongPress={() => handleAccountLongPress(acc)}
                 activeOpacity={0.7}
               >
-                <View style={s.accountAva}>
+                <View style={[s.accountAva, { backgroundColor: getAvatarColor(acc.userId) }]}>
                   {acc.photo ? (
                     <Image source={{ uri: acc.photo }} style={s.accountAvaImg} />
                   ) : (
@@ -347,7 +348,8 @@ const s = StyleSheet.create({
   edit: { backgroundColor: '#1A1A1C', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 16 },
   editTxt: { fontSize: 15, fontWeight: '500', color: '#007AFF' },
   prof: { alignItems: 'center', paddingTop: 16, paddingBottom: 16 },
-  ava: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
+  ava: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
+  avaPlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
   avaImg: { width: '100%', height: '100%' },
   avaTxt: { fontSize: 40, fontWeight: '600', color: '#FFF' },
   name: { fontSize: 24, fontWeight: '600', color: '#FFF', marginBottom: 4 },
@@ -364,7 +366,7 @@ const s = StyleSheet.create({
   right: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   val: { fontSize: 14, color: '#8E8E93' },
   accountItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12 },
-  accountAva: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', marginRight: 12, overflow: 'hidden' },
+  accountAva: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 12, overflow: 'hidden' },
   accountAvaImg: { width: '100%', height: '100%' },
   accountAvaTxt: { fontSize: 18, fontWeight: '400', color: '#FFF' },
   accountInfo: { flex: 1 },
