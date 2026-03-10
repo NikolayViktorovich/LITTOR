@@ -14,6 +14,7 @@ import Register from './src/screens/register';
 import Settings from './src/screens/settings';
 import Profile from './src/screens/profile';
 import EditProfile from './src/screens/edit';
+import AddAccount from './src/screens/add-account';
 import Notifications from './src/screens/notifications';
 import Privacy from './src/screens/privacy';
 import Data from './src/screens/data';
@@ -72,6 +73,7 @@ function AppNavigator() {
           <Stack.Screen name="main" component={Tabs} />
           <Stack.Screen name="profile" component={Profile} />
           <Stack.Screen name="edit" component={EditProfile} />
+          <Stack.Screen name="addAccount" component={AddAccount} />
           <Stack.Screen name="notifications" component={Notifications} />
           <Stack.Screen name="privacy" component={Privacy} />
           <Stack.Screen name="data" component={Data} />
