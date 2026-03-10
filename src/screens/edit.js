@@ -43,7 +43,7 @@ export default function EditProfileScreen({ navigation, route }) {
       headerShadowVisible: false,
       headerRight: () => (
         <TouchableOpacity onPress={saveAll} disabled={saving} style={{ paddingRight: 16 }}>
-          {saving ? <ActivityIndicator size="small" color="#007AFF" /> : <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>{t('editProfile.done')}</Text>}
+          {saving ? <ActivityIndicator size="small" color="#007AFF" /> : <Text style={{ fontSize: 17, fontWeight: '500', color: '#007AFF' }}>{t('editProfile.done')}</Text>}
         </TouchableOpacity>
       )
     });
@@ -173,13 +173,13 @@ const s = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: '#000' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 8 },
   back: { paddingHorizontal: 8, zIndex: 1 },
-  title: { fontSize: 17, fontWeight: '600', color: '#FFF' },
+  title: { fontSize: 17, fontWeight: '500', color: '#FFF' },
   done: { paddingHorizontal: 8, minWidth: 60, alignItems: 'flex-end', zIndex: 1 },
-  doneTxt: { fontSize: 17, fontWeight: '600', color: '#007AFF' },
+  doneTxt: { fontSize: 17, fontWeight: '500', color: '#007AFF' },
   photo: { alignItems: 'center', paddingVertical: 32 },
   ava: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
   avaImg: { width: '100%', height: '100%' },
-  avaTxt: { fontSize: 40, fontWeight: '700', color: '#FFF' },
+  avaTxt: { fontSize: 40, fontWeight: '500', color: '#FFF' },
   change: { fontSize: 17, color: '#007AFF' },
   sec: { backgroundColor: '#1A1A1C', marginHorizontal: 16, marginBottom: 8, borderRadius: 28, overflow: 'hidden' },
   inp: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: '#2C2C2E' },

@@ -88,13 +88,13 @@ const s = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modal: { backgroundColor: '#1A1A1C', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 34 },
   header: { paddingVertical: 16, paddingHorizontal: 20, borderBottomWidth: 0.5, borderBottomColor: '#2C2C2E' },
-  title: { fontSize: 17, fontWeight: '600', color: '#FFF', textAlign: 'center' },
+  title: { fontSize: 17, fontWeight: '500', color: '#FFF', textAlign: 'center' },
   picker: { height: 200 },
   del: { paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center' },
   delTxt: { fontSize: 17, color: '#FF3B30' },
   btns: { flexDirection: 'row', paddingHorizontal: 16, paddingTop: 16, gap: 12 },
   btn: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: '#2C2C2E', alignItems: 'center' },
   primary: { backgroundColor: '#007AFF' },
-  btnTxt: { fontSize: 17, fontWeight: '600', color: '#FFF' },
+  btnTxt: { fontSize: 17, fontWeight: '500', color: '#FFF' },
   primaryTxt: { color: '#FFF' }
 });

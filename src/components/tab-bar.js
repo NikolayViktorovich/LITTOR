@@ -94,6 +94,6 @@ const s = StyleSheet.create({
   wrap: { position: 'absolute', bottom: 20, left: 50, right: 50 },
   bar: { flexDirection: 'row', backgroundColor: 'rgba(28,28,30,0.92)', borderRadius: 28, height: 56, paddingHorizontal: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.44, shadowRadius: 16, elevation: 16, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.12)' },
   item: { flex: 1, justifyContent: 'center', alignItems: 'center', height: '100%', zIndex: 10 },
-  label: { fontSize: 10, fontWeight: '500', marginTop: 3, color: '#FFF' },
+  label: { fontSize: 10, fontWeight: '400', marginTop: 3, color: '#FFF' },
   blob: { position: 'absolute', height: '85%', top: '7.5%', left: 0, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.15)', zIndex: 1 },
 });

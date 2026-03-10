@@ -65,7 +65,7 @@ const s = StyleSheet.create({
   opts: { paddingVertical: 8 },
   opt: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, gap: 16 },
   border: { borderBottomWidth: 0.5, borderBottomColor: '#2C2C2E' },
-  label: { fontSize: 17, fontWeight: '500', color: '#FFF' },
+  label: { fontSize: 17, fontWeight: '400', color: '#FFF' },
   cancel: { paddingVertical: 16, borderTopWidth: 0.5, borderTopColor: '#2C2C2E', alignItems: 'center', marginTop: 8 },
-  cancelTxt: { fontSize: 17, fontWeight: '600', color: '#007AFF' }
+  cancelTxt: { fontSize: 17, fontWeight: '500', color: '#007AFF' }
 });

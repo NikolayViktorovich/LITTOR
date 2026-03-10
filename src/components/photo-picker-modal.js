@@ -95,7 +95,7 @@ const s = StyleSheet.create({
   modal: { borderRadius: 20, overflow: 'hidden', marginBottom: 8 },
   opts: { paddingVertical: 8 },
   opt: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, gap: 16 },
-  label: { fontSize: 17, fontWeight: '500' },
+  label: { fontSize: 17, fontWeight: '400' },
   cancel: { paddingVertical: 16, borderTopWidth: 0.5, alignItems: 'center', marginTop: 8 },
-  cancelTxt: { fontSize: 17, fontWeight: '600' }
+  cancelTxt: { fontSize: 17, fontWeight: '500' }
 });

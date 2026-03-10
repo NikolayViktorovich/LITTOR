@@ -170,10 +170,10 @@ const s = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 0.5 },
   backButton: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '600', flex: 1, textAlign: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '500', flex: 1, textAlign: 'center' },
   placeholder: { width: 40 },
   scrollContent: { paddingBottom: 40 },
-  sectionTitle: { fontSize: 13, fontWeight: '600', marginTop: 24, marginBottom: 8, marginLeft: 16, textTransform: 'uppercase' },
+  sectionTitle: { fontSize: 13, fontWeight: '500', marginTop: 24, marginBottom: 8, marginLeft: 16, textTransform: 'uppercase' },
   section: { marginHorizontal: 16, borderRadius: 28, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 16 },
   label: { fontSize: 16, flex: 1 },
@@ -183,5 +183,5 @@ const s = StyleSheet.create({
   value: { fontSize: 16 },
   colorPreview: { width: 24, height: 24, borderRadius: 12 },
   resetButton: { marginHorizontal: 16, marginTop: 24, borderRadius: 28, paddingVertical: 14, alignItems: 'center' },
-  resetText: { fontSize: 16, fontWeight: '600' }
+  resetText: { fontSize: 16, fontWeight: '500' }
 });

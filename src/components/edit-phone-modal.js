@@ -67,9 +67,9 @@ const s = StyleSheet.create({
   safe: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: '#2C2C2E' },
   back: { paddingHorizontal: 8 },
-  title: { fontSize: 17, fontWeight: '600', color: '#FFF' },
+  title: { fontSize: 17, fontWeight: '500', color: '#FFF' },
   done: { paddingHorizontal: 8 },
-  doneTxt: { fontSize: 17, fontWeight: '600', color: '#007AFF' },
+  doneTxt: { fontSize: 17, fontWeight: '500', color: '#007AFF' },
   content: { flex: 1, padding: 16 },
   input: { backgroundColor: '#1A1A1C', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 17, color: '#FFF' },
   hint: { fontSize: 13, color: '#8E8E93', marginTop: 12, lineHeight: 18 }

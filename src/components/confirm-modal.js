@@ -50,13 +50,13 @@ export default function ConfirmModal({ visible, title, message, onConfirm, onCan
 
 const s = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modal: { backgroundColor: '#2C2C2E', borderRadius: 20, padding: 24, width: '100%', maxWidth: 340 },
-  title: { fontSize: 17, fontWeight: '600', color: '#FFF', textAlign: 'center', marginBottom: 12 },
+  modal: { backgroundColor: '#1A1A1C', borderRadius: 20, padding: 24, width: '100%', maxWidth: 340 },
+  title: { fontSize: 17, fontWeight: '500', color: '#FFF', textAlign: 'center', marginBottom: 12 },
   msg: { fontSize: 15, color: '#8E8E93', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
   btns: { gap: 12 },
   btn: { paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
   confirm: { backgroundColor: '#FF3B30' },
   cancel: { backgroundColor: 'rgba(255,255,255,0.1)' },
-  confirmTxt: { fontSize: 16, fontWeight: '600', color: '#FFF' },
-  cancelTxt: { fontSize: 16, fontWeight: '500', color: '#0A84FF' },
+  confirmTxt: { fontSize: 16, fontWeight: '500', color: '#FFF' },
+  cancelTxt: { fontSize: 16, fontWeight: '400', color: '#0A84FF' },
 });
