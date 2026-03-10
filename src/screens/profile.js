@@ -1,9 +1,10 @@
 import { useContext, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, StatusBar, ActivityIndicator, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, StatusBar, ActivityIndicator, Image, Alert, ActionSheetIOS, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import * as Clipboard from 'expo-clipboard';
 import { AuthContext } from '../context/auth';
 import { API_URL } from '../config/constants';
 import { formatPhoneNumber } from '../utils/formatphone';
@@ -89,6 +90,32 @@ export default function MyProfileScreen({ navigation }) {
     }
   };
 
+  const copyPhone = async () => {
+    if (!profile?.phone) return;
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: [t('common.cancel'), t('common.copy')], cancelButtonIndex: 0 },
+        (i) => { if (i === 1) Clipboard.setStringAsync(profile.phone); }
+      );
+    } else {
+      await Clipboard.setStringAsync(profile.phone);
+      Alert.alert(t('profile.copied'), t('profile.phoneCopied'));
+    }
+  };
+
+  const copyUsername = async () => {
+    if (!profile?.username) return;
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: [t('common.cancel'), t('common.copy')], cancelButtonIndex: 0 },
+        (i) => { if (i === 1) Clipboard.setStringAsync(`@${profile.username}`); }
+      );
+    } else {
+      await Clipboard.setStringAsync(`@${profile.username}`);
+      Alert.alert(t('profile.copied'), t('profile.usernameCopied'));
+    }
+  };
+
   if (loading) return (
     <SafeAreaView style={s.wrap}>
       <StatusBar barStyle="light-content" />
@@ -120,7 +147,10 @@ export default function MyProfileScreen({ navigation }) {
             )}
           </View>
           <Text style={s.name}>{[profile?.name, profile?.lastName].filter(Boolean).join(' ') || user?.username || 'User'}</Text>
-          <Text style={s.status}>{t('profile.online')}</Text>
+          <View style={s.status}>
+            <Text style={{ color: '#8E8E93' }}>{t('profile.online')}</Text>
+            {profile?.username && <Text style={s.username}>• @{profile.username}</Text>}
+          </View>
         </View>
         {profile?.username && (
           <View style={s.chan}>
@@ -135,15 +165,15 @@ export default function MyProfileScreen({ navigation }) {
         )}
         <View style={s.info}>
           {profile?.phone && (
-            <View style={s.row}>
+            <TouchableOpacity style={s.row} onLongPress={copyPhone} activeOpacity={0.7}>
               <View style={s.left}>
                 <Text style={s.lbl}>{t('profile.mobile')}</Text>
                 <Text style={s.val}>{formatPhoneNumber(profile.phone)}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
           {profile?.username && (
-            <View style={[s.row, profile?.phone && s.rowBorder]}>
+            <TouchableOpacity style={[s.row, profile?.phone && s.rowBorder]} onLongPress={copyUsername} activeOpacity={0.7}>
               <View style={s.left}>
                 <Text style={s.lbl}>{t('profile.username')}</Text>
                 <Text style={s.val}>@{profile.username}</Text>
@@ -151,13 +181,13 @@ export default function MyProfileScreen({ navigation }) {
               <TouchableOpacity onPress={() => setShowQR(true)} activeOpacity={0.7}>
                 <Ionicons name="qr-code-outline" size={24} color="#007AFF" />
               </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           )}
           {profile?.birthDate && (
             <View style={[s.row, (profile?.phone || profile?.username) && s.rowBorder]}>
               <View style={s.left}>
                 <Text style={s.lbl}>{t('profile.birthday')}</Text>
-                <Text style={s.val}>{profile.birthDate}</Text>
+                <Text style={s.valWhite}>{profile.birthDate}</Text>
               </View>
             </View>
           )}
@@ -165,7 +195,7 @@ export default function MyProfileScreen({ navigation }) {
             <View style={[s.row, (profile?.phone || profile?.username || profile?.birthDate) && s.rowBorder]}>
               <View style={s.left}>
                 <Text style={s.lbl}>{t('profile.bio')}</Text>
-                <Text style={[s.val, { color: '#FFF' }]}>{profile.bio}</Text>
+                <Text style={s.valWhite}>{profile.bio}</Text>
               </View>
             </View>
           )}
@@ -185,31 +215,33 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 8 },
   back: { paddingHorizontal: 8 },
   edit: { backgroundColor: '#1A1A1C', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 16 },
-  editTxt: { fontSize: 15, fontWeight: '600', color: '#007AFF' },
+  editTxt: { fontSize: 15, fontWeight: '500', color: '#007AFF' },
   prof: { alignItems: 'center', paddingTop: 16, paddingBottom: 16 },
   avaCont: { position: 'relative', marginBottom: 16 },
   ava: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   avaImg: { width: '100%', height: '100%' },
-  avaTxt: { fontSize: 40, fontWeight: '700', color: '#FFF' },
+  avaTxt: { fontSize: 40, fontWeight: '500', color: '#FFF' },
   dots: { flexDirection: 'row', position: 'absolute', bottom: -12, left: 0, right: 0, justifyContent: 'center', gap: 4 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#3A3A3C' },
   dotActive: { backgroundColor: '#007AFF' },
-  name: { fontSize: 24, fontWeight: '700', color: '#FFF', marginBottom: 4, textAlign: 'center' },
-  status: { fontSize: 15, color: '#8E8E93' },
+  name: { fontSize: 24, fontWeight: '500', color: '#FFF', marginBottom: 4, textAlign: 'center' },
+  status: { fontSize: 15, color: '#8E8E93', flexDirection: 'row', alignItems: 'center', gap: 8 },
+  username: { fontSize: 15, color: '#8E8E93' },
   chan: { marginBottom: 8 },
   chanHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8 },
-  chanLabel: { fontSize: 13, fontWeight: '600', color: '#8E8E93', letterSpacing: 0.5 },
+  chanLabel: { fontSize: 13, fontWeight: '500', color: '#8E8E93', letterSpacing: 0.5 },
   chanCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1C', marginHorizontal: 16, padding: 12, borderRadius: 28 },
   chanAva: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', marginRight: 12, overflow: 'hidden' },
   chanAvaImg: { width: '100%', height: '100%' },
-  chanAvaTxt: { fontSize: 20, fontWeight: '700', color: '#FFF' },
+  chanAvaTxt: { fontSize: 20, fontWeight: '500', color: '#FFF' },
   chanInfo: { flex: 1 },
-  chanName: { fontSize: 16, fontWeight: '600', color: '#FFF', marginBottom: 2 },
+  chanName: { fontSize: 16, fontWeight: '500', color: '#FFF', marginBottom: 2 },
   info: { backgroundColor: '#1A1A1C', marginHorizontal: 16, marginTop: 8, borderRadius: 28, overflow: 'hidden' },
   row: { paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rowBorder: { borderTopWidth: 0.5, borderTopColor: '#2C2C2E' },
   left: { flex: 1 },
   lbl: { fontSize: 13, color: '#8E8E93', marginBottom: 2 },
   val: { fontSize: 17, color: '#007AFF' },
+  valWhite: { fontSize: 17, color: '#FFF' },
   space: { height: 100 }
 });
