@@ -19,9 +19,9 @@ const connectMongoDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ MongoDB connected');
+    console.log('MongoDB connected');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('MongoDB connection error:', error);
     process.exit(1);
   }
 };
@@ -36,8 +36,8 @@ const redis = new Redis({
   },
 });
 
-redis.on('connect', () => console.log('✅ Redis connected'));
-redis.on('error', (err) => console.error('❌ Redis error:', err));
+redis.on('connect', () => console.log('Redis connected'));
+redis.on('error', (err) => console.error('Redis error:', err));
 
 const initDatabase = async () => {
   try {
@@ -79,10 +79,46 @@ const initDatabase = async () => {
       CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
       CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
       CREATE INDEX IF NOT EXISTS idx_account_sessions_device ON account_sessions(device_id);
+
+      CREATE TABLE IF NOT EXISTS signal_identity_keys (
+        user_id VARCHAR(255) PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        identity_key JSONB NOT NULL,
+        registration_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS signal_pre_keys (
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        key_id INTEGER NOT NULL,
+        key_pair JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, key_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS signal_signed_pre_keys (
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        key_id INTEGER NOT NULL,
+        key_pair JSONB NOT NULL,
+        signature BYTEA NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, key_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS signal_sessions (
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        recipient_id VARCHAR(255) NOT NULL,
+        record TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, recipient_id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_signal_sessions_user ON signal_sessions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_signal_sessions_recipient ON signal_sessions(recipient_id);
     `);
-    console.log('✅ PostgreSQL tables initialized');
+    console.log('PostgreSQL tables initialized');
   } catch (error) {
-    console.error('❌ PostgreSQL init error:', error);
+    console.error('PostgreSQL init error:', error);
     throw error;
   }
 };
