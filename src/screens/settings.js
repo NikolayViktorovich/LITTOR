@@ -166,7 +166,7 @@ export default function SettingsScreen({ navigation }) {
             <Text style={[s.label, { color: '#FF3B30' }]}>{t('settings.logout')}</Text>
           </TouchableOpacity>
         </View>
-        <Text style={s.ver}>Littor v1.0.0</Text>
+        <Text style={s.ver}>LITTOR v1.0.7</Text>
       </ScrollView>
       <PhotoViewer visible={showViewer} photos={profile?.photos || []} initialIndex={0} onClose={() => setShowViewer(false)} onSetMain={handleMain} onDelete={handleDel} />
       <PhotoPickerModal visible={showPhoto} onClose={() => setShowPhoto(false)} onPhotoSelected={handlePhoto} />
